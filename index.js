@@ -21,47 +21,45 @@ mongoose
   .catch((err) => console.error("Connection error:", err));
 
 // Define a schema and model
-const ItemSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    data: {
-      type: String,
-      required: true,
-    },
+const UserSchema = new mongoose.Schema({
+  phone: {
+    type: String,
+    required: true,
   },
-  { timestamps: true }
-);
-
-const Item = mongoose.model("Item", ItemSchema);
-
-// Routes
-
-// Create a new item using request body
-app.post("/items", async (req, res) => {
-  try {
-    const newItem = new Item(req.body);
-    const savedItem = await newItem.save();
-    res.status(201).json(savedItem);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+  otp: {
+    type: Number,
+    required: true,
+  },
+  status: {
+    type: String,
+    required: true,
+  },
+  terminate: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+  pause: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
 });
 
+const Item = mongoose.model("User", UserSchema);
+
+// Routes
 // Create a new item using query params
-app.get("/create-item", async (req, res) => {
-  const { name, data } = req.query;
+app.get("/add-user", async (req, res) => {
+  const { phone, otp, status, terminate, pause } = req.query;
 
-  if (!name || !data) {
-    return res
-      .status(400)
-      .json({ error: "Missing required fields (name, data)" });
+  if ((!phone || !otp, !status, !terminate, !pause)) {
+    return res.status(400).json({
+      error: "Missing required fields: phone, otp, status, terminate, pause",
+    });
   }
-
   try {
-    const newItem = new Item({ name, data });
+    const newItem = new Item({ phone, otp, status, terminate, pause });
     const savedItem = await newItem.save();
     res
       .status(201)
@@ -72,7 +70,7 @@ app.get("/create-item", async (req, res) => {
 });
 
 // Read all items
-app.get("/items", async (req, res) => {
+app.get("/users", async (req, res) => {
   try {
     const items = await Item.find();
     res.json(items);
@@ -81,8 +79,19 @@ app.get("/items", async (req, res) => {
   }
 });
 
+// Get an item by Phone
+app.get("/user/:phone", async (req, res) => {
+  try {
+    const user = await Item.findOne({ phone: req.params.phone }); // Find by phone field
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Read a single item by ID
-app.get("/item/:id", async (req, res) => {
+app.get("/user/:id", async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
     if (!item) return res.status(404).json({ error: "Item not found" });
@@ -93,7 +102,7 @@ app.get("/item/:id", async (req, res) => {
 });
 
 // Update an item by ID
-app.put("/item/:id", async (req, res) => {
+app.put("/user/:id", async (req, res) => {
   try {
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -107,7 +116,7 @@ app.put("/item/:id", async (req, res) => {
 });
 
 // Delete an item by ID
-app.delete("/item/:id", async (req, res) => {
+app.delete("/user/:id", async (req, res) => {
   try {
     const deletedItem = await Item.findByIdAndDelete(req.params.id);
     if (!deletedItem) return res.status(404).json({ error: "Item not found" });
