@@ -73,6 +73,17 @@ app.get("/add-user", async (req, res) => {
   }
 });
 
+// Create a new item
+app.post("/new-user", async (req, res) => {
+  try {
+    const newItem = new Item(req.body);
+    const savedItem = await newItem.save();
+    res.status(201).json(savedItem);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Read all items
 app.get("/users", async (req, res) => {
   try {
